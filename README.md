@@ -3,3 +3,9 @@
 2、增加一个回调接口，目的是设备轮播图片的时候，回调以方便服务端知道对应的设备当前显示的画面。
 3、设备激活就是新增的时候返回的数据添加一个key，这个key的作用是设备用来请求接口使用，现有接口需要token的，但是设备获取的相关接口认证使用token或者key都要可以才行
 4、图片投屏因为部分图片和屏幕像素不对，人工编辑图片，裁剪、留白、或者填充或者缩放等等，这个要记录，下发的时候是编辑后的图片以适配屏幕显示
+
+
+"AccessKeyId": "ALTAI5tSGPPReBBE2wGcd9rkR",
+"AccessKeySecret": "A73rBXpdV6dt4Q1kpeDiuj0kfT1lvJO",
+"Endpoint": "oss-cn-shanghai.aliyuncs.com",
+"BucketName": "inkqiyi",
