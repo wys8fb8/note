@@ -19,3 +19,5 @@
 3、彻底全签名 — 你坚持要的方案。我会给你一份具体的改造清单(预计 10 个文件,12 小时),你确认后再动手。   之前这三个我选2 
 
 保持现状(推荐) — 按 CLAUDE.md 的设计:bucket 默认 private → 给 watermarked/ thumbnails/ 两个前缀单独配 public-read(在阿里云控制台 bucket → 权限管理 → bucket policy 加 2 条规则即可,5 分钟搞定),原图依然只走预签名。安全、便宜、性能好。
+缩略图: https://inkqiyi.oss-cn-shanghai.aliyuncs.com/thumbnails/artworks/119/261815a350914d7aa1d9da77185f9817.webp
+水印图: https://inkqiyi.oss-cn-shanghai.aliyuncs.com/watermarked/artworks/119/261815a350914d7aa1d9da77185f9817.webp
