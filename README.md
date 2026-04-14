@@ -21,3 +21,40 @@
 保持现状(推荐) — 按 CLAUDE.md 的设计:bucket 默认 private → 给 watermarked/ thumbnails/ 两个前缀单独配 public-read(在阿里云控制台 bucket → 权限管理 → bucket policy 加 2 条规则即可,5 分钟搞定),原图依然只走预签名。安全、便宜、性能好。
 缩略图: https://inkqiyi.oss-cn-shanghai.aliyuncs.com/thumbnails/artworks/119/261815a350914d7aa1d9da77185f9817.webp
 水印图: https://inkqiyi.oss-cn-shanghai.aliyuncs.com/watermarked/artworks/119/261815a350914d7aa1d9da77185f9817.webp
+
+
+# ========== Gemini AI ==========
+GEMINI_API_KEY=AIzaSyCEl5QxQUrheh3e-iCZrVtTPNxuAd2c1xM
+GEMINI_API_URL=https://apigateway.iwzh.net/v1beta/models
+GEMINI_MODEL=gemini-3.1-flash-image-preview
+GEMINI_TIMEOUT=180
+GEMINI_IMAGE_SIZE=1K
+GEMINI_IMAGE_COST_POINTS=10
+
+# ========== AI 存储 (对齐 gateway 的 /static 挂载) ==========
+AI_STORAGE_BACKEND=local
+AI_STORAGE_LOCAL_ROOT=./storage/ai-uploads
+AI_STORAGE_PUBLIC_BASE_URL=http://localhost:8080/static/ai-uploads
+
+# ========== gateway static base ==========
+STORAGE_BASE_DIR=./storage
+
+# ========== Admin DB（system_configs 等管理后台表所在库） ==========
+ADMIN_DATABASE_URL=sqlite+aiosqlite:///./data/admin.db
+
+# ========== 主密钥（用于加密 system_configs 中 is_encrypted=1 的字段） ==========
+# 一旦设置后请勿再修改,否则历史密文将无法解密。
+# 生成方式: python -c "import secrets; print(secrets.token_hex(32))"
+MASTER_KEY=a1b2d292b79848f7d455507b666ec41b03e2b6723603359b70a3ff19b50c0d44
+
+# ========== 存储后端选择 ==========
+# auto = 优先 OSS,加载失败回退本地; oss = 强制 OSS; local = 强制本地
+STORAGE_BACKEND=auto
+
+# ========== 阿里云 OSS（首次引导值，由 seed_oss_config.py 写入 system_configs） ==========
+ALIYUN_OSS_ENDPOINT=oss-cn-shanghai.aliyuncs.com
+ALIYUN_OSS_BUCKET=inkqiyi
+ALIYUN_OSS_ACCESS_KEY_ID=AALTAI5tSGPPReBBE2wGcd9rkRRY
+ALIYUN_OSS_ACCESS_KEY_SECRET=UI73rBXpdV6dt4Q1kpeDiuj0kfT1lvJOGH
+ALIYUN_OSS_CDN_DOMAIN=
+
