@@ -58,3 +58,23 @@ ALIYUN_OSS_ACCESS_KEY_ID=AALTAI5tSGPPReBBE2wGcd9rkRRY
 ALIYUN_OSS_ACCESS_KEY_SECRET=UI73rBXpdV6dt4Q1kpeDiuj0kfT1lvJOGH
 ALIYUN_OSS_CDN_DOMAIN=
 
+
+INSERT INTO points_transactions
+    (account_id, user_id, tx_type, amount, balance_before, balance_after, related_no, remark, created_at, updated_at)
+SELECT
+    id,
+    user_id,
+    'admin_adjust',
+    10000,
+    balance - 10000,
+    balance,
+    NULL,
+    '管理员手动充值',
+    NOW(),
+    NOW()
+FROM points_accounts
+WHERE user_id = 5;
+
+
+SELECT id, user_id, balance, total_earned, total_spent, updated_at
+FROM points_accounts WHERE user_id = 5;
