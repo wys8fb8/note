@@ -59,6 +59,18 @@ ALIYUN_OSS_ACCESS_KEY_SECRET=UI73rBXpdV6dt4Q1kpeDiuj0kfT1lvJOGH
 ALIYUN_OSS_CDN_DOMAIN=
 
 
+- 连接到 inkframe_points 库
+USE inkframe_points;
+
+-- 给 user_id = 5 添加 10000 点数（若已存在则累加；不存在则插入）
+INSERT INTO points_accounts (user_id, balance, total_earned, total_spent, created_at, updated_at)
+VALUES (5, 10000, 10000, 0, NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+    balance       = balance + 10000,
+    total_earned  = total_earned + 10000,
+    updated_at    = NOW();
+
+-- 补一条流水，便于后台对账
 INSERT INTO points_transactions
     (account_id, user_id, tx_type, amount, balance_before, balance_after, related_no, remark, created_at, updated_at)
 SELECT
@@ -75,6 +87,6 @@ SELECT
 FROM points_accounts
 WHERE user_id = 5;
 
-
+-- 验证
 SELECT id, user_id, balance, total_earned, total_spent, updated_at
 FROM points_accounts WHERE user_id = 5;
