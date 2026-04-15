@@ -90,3 +90,80 @@ WHERE user_id = 5;
 -- 验证
 SELECT id, user_id, balance, total_earned, total_spent, updated_at
 FROM points_accounts WHERE user_id = 5;
+抓到真正的错误了,根本不是余额问题。
+
+真实错误
+
+StatusCode.UNAVAILABLE
+failed to connect to all addresses; last error: UNKNOWN:
+ipv4:127.0.0.1:60061: Failed to connect to remote host: Connection refused
+ai_service 尝试用 gRPC 连 127.0.0.1:60061 调 SpendPoints,连不上。所以报错完全不是因为你点数不够——余额 10000 已确认到账。错误发生在预扣点数的 gRPC 调用阶段,被 ai_servicer_mixin.py:63-68 的 except Exception 吞掉后套了个误导性的"点数不足或扣减失败"前缀。
+
+根因
+ai_service 的默认 points 地址是 main.py:123:
+
+
+os.environ.get("POINTS_SERVICE_GRPC_ADDR", "127.0.0.1:60061")
+生产是 Docker 部署,ai_service 容器里的 127.0.0.1:60061 指向它自己,而不是 points_service 容器。正确做法是环境变量设成 points_service:60061(Docker compose 服务名)。
+
+翻 docker-compose.yml 验证一下:
+
+Grep "POINTS_SERVICE_GRPC_ADDR|ai_service:" (in /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/docker-compose.yml)
+16 lines of output
+Grep "POINTS_SERVICE_GRPC_ADDR|ai_service:" (in /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/docker-compose.prod.yml)
+16 lines of output
+Read docker-compose.yml (lines 412-461)
+Read docker-compose.prod.yml (lines 271-350)
+确认根因。 定位到 docker-compose.yml:419-430 和 docker-compose.prod.yml:278-293:
+
+ai_service 容器的 environment 里没有 POINTS_SERVICE_GRPC_ADDR(和 ARTWORK_SERVICE_GRPC_ADDR),所以 main.py:123 走默认值 127.0.0.1:60061——在容器内就是 ai_service 自己,端口上根本没东西监听,于是 connection refused。
+
+对比 gateway 的配置(docker-compose.yml:184-194),它把 11 个 *_SERVICE_GRPC_ADDR 都显式列出了,但 ai_service 被漏了。这是个配置遗漏的 bug,不是代码 bug。
+
+修复
+两份 compose 都改。docker-compose.yml 里 L419-L423:
+
+
+  ai_service:
+    ...
+    environment:
+      <<: *common-env
+      DATABASE_URL: mysql+aiomysql://inkframe:inkframe_dev_2024@mysql:3306/inkframe_ai
+      AI_SERVICE_GRPC_PORT: "60060"
+      METRICS_PORT: "9100"
+      POINTS_SERVICE_GRPC_ADDR: points_service:60061   # 新增
+      ARTWORK_SERVICE_GRPC_ADDR: artwork_service:60053 # 新增(生图成功后要调 artwork 入库)
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      points_service: { condition: service_started }   # 新增(避免启动顺序问题)
+      artwork_service: { condition: service_started }  # 新增
+docker-compose.prod.yml 里 L286-L293 同理补这两行 env。
+
+应用
+生产上:
+
+
+# 1. 改 docker-compose.prod.yml(把上面两行加进 ai_service.environment)
+# 2. 只重启 ai_service 即可,不需要动其它容器
+docker compose -f docker-compose.prod.yml up -d --force-recreate ai_service
+
+# 3. 验证 env 注入进去了
+docker exec inkframe-ai-service env | grep -E 'POINTS|ARTWORK'
+# 应看到:
+#   POINTS_SERVICE_GRPC_ADDR=points_service:60061
+#   ARTWORK_SERVICE_GRPC_ADDR=artwork_service:60053
+
+# 4. 看启动日志
+docker logs inkframe-ai-service 2>&1 | grep -E 'PointsService|ArtworkService'
+# 应看到:
+#   PointsService gRPC client 已初始化
+#   ArtworkService gRPC client 已初始化
+改完后用刚才这个 curl 再跑一遍 /api/v1/ai/generate,应该就能成功返回 generation_id + points_remaining=9990 了。
+
+顺带建议(可不改,但值得知道)
+ai_servicer_mixin.py:63-68 那段 except Exception as e 把所有异常都套成"点数不足或扣减失败",这次排查被误导了 20 分钟就是因为它。建议区分:
+
+InsufficientBalance 类 gRPC FAILED_PRECONDITION → "点数不足"
+其它异常(UNAVAILABLE / DEADLINE_EXCEEDED / ...) → "点数服务不可用,请稍后重试",日志层面 logger.exception(...)
+但这是二期优化,当务之急是先把上面那两行 env 补上让你能跑通。
