@@ -1,46 +1,181 @@
-INSERT OR IGNORE INTO system_configs (group_key, config_key, config_value, is_encrypted, description) VALUES
-('bailian', 'api_key', '你的百炼API Key', 1, '百炼 API Key'),
-('bailian', 'api_url', 'https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', 0, '百炼 API 地址（北京）'),
-('bailian', 'model', 'wan2.7-image', 0, '模型名称'),
-('bailian', 'timeout', '180', 0, '请求超时（秒）'),
-('bailian', 'size', '2K', 0, '输出分辨率（1K/2K/4K）');
+-- =============================================================================
+-- InkFrame 测试数据清理脚本
+-- 生成日期: 2026-04-18
+-- 说明: 清理所有业务数据，保留配置表、类型表和管理员数据
+-- 用法: mysql -u root -p < scripts/cleanup_test_data.sql
+-- =============================================================================
+-- 注意: 外键已提前清理，可直接 DELETE
+-- 保留的表（不清理）:
+--   inkframe_admin:  admins, admin_operation_logs, system_configs（整库保留）
+--   inkframe_user:   membership_plans（配置表）
+--   inkframe_artwork: artwork_categories（类型表）
+--   inkframe_product: product_categories（类型表）
+--   inkframe_device:  device_models（类型表）
+--   inkframe_notification: notification_templates（配置表）
+--   inkframe_ai:     ai_styles（配置表）
+--   inkframe_points: points_recharge_packages（配置表）
+-- =============================================================================
 
-INSERT OR IGNORE INTO system_configs (group_key, config_key, config_value, is_encrypted, description) VALUES
-('ai', 'provider', 'bailian', 0, 'AI 生图 provider（bailian / gemini）'),
-('ai', 'image_cost_points', '10', 0, '每次 AI 生图消耗点数');
+SET FOREIGN_KEY_CHECKS = 0;
 
-INSERT INTO ai_styles (name, code, prompt_prefix, preview_url, description, sort_order, is_active)
-VALUES
-  ('水墨画',   'ink_wash',     'in traditional Chinese ink wash painting style',  NULL, '中国传统水墨画风格',   1, 1),
-  ('油画',     'oil',          'in oil painting style',                           NULL, '经典油画风格',         2, 1),
-  ('素描',     'sketch',       'in pencil sketch style',                          NULL, '铅笔素描风格',         3, 1),
-  ('极简线条', 'minimal_line', 'in minimal line art style',                       NULL, '极简线条艺术风格',     4, 1),
-  ('几何抽象', 'geometric',    'in geometric abstract art style',                 NULL, '几何抽象艺术风格',     5, 1),
-  ('浮世绘',   'ukiyo_e',      'in Japanese ukiyo-e woodblock print style',       NULL, '日本浮世绘版画风格',   6, 1),
-  ('黑白摄影', 'bw_photo',     'in black and white photography style',            NULL, '黑白摄影风格',         7, 1),
-  ('波普艺术', 'pop_art',      'in pop art style',                                NULL, '波普艺术风格',         8, 1);
+-- =============================================================================
+-- 1. inkframe_user — 用户服务
+-- =============================================================================
+-- 保留: membership_plans（会员套餐配置）
+-- 清理: 用户、地址、会员记录、OAuth、会话、通知偏好、关注
+-- =============================================================================
+USE inkframe_user;
 
+DELETE FROM user_follows;
+DELETE FROM user_notification_prefs;
+DELETE FROM user_sessions;
+DELETE FROM user_oauth_bindings;
+DELETE FROM user_oauth;
+DELETE FROM user_memberships;
+DELETE FROM user_addresses;
+DELETE FROM users;
 
-INSERT INTO admins (username, password_hash, real_name, role, status, created_at, updated_at)
-VALUES ('bitsharexiyi', '$2b$12$apwjTyZx3D4e/dGo34CGLOu3mcLNs6lOSn47oGXOBwgzC1K0jDo02ads', 'bitshare', 'super_admin', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+-- =============================================================================
+-- 2. inkframe_artist — 艺术家服务
+-- =============================================================================
+-- 保留: 无配置表
+-- 清理: 全部
+-- =============================================================================
+USE inkframe_artist;
 
-server {
-    listen       8006; 
-    server_name  47.100.177.89;
+DELETE FROM artist_withdraw_requests;
+DELETE FROM artist_bank_accounts;
+DELETE FROM artist_earnings_records;
+DELETE FROM artist_earnings_accounts;
+DELETE FROM artist_kyc_records;
+DELETE FROM artists;
 
-    location / {
-        root   /bsadmin/xiyiart/admin/current;
-        index  index.html index.htm;
-        try_files $uri $uri/ /index.html;
-    }
+-- =============================================================================
+-- 3. inkframe_artwork — 艺术品服务
+-- =============================================================================
+-- 保留: artwork_categories（作品分类）
+-- 清理: 作品、审核、资产定义、数字藏品、点赞、收藏、图库
+-- =============================================================================
+USE inkframe_artwork;
 
-    location /api/ {
-        client_max_body_size 100m;
-        proxy_pass http://127.0.0.1:8010;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-}
+DELETE FROM user_library;
+DELETE FROM wishlists;
+DELETE FROM artwork_likes;
+DELETE FROM digital_collectibles;
+DELETE FROM asset_definitions;
+DELETE FROM artwork_review_records;
+DELETE FROM artworks;
 
+-- =============================================================================
+-- 4. inkframe_copyright — 版权服务
+-- =============================================================================
+-- 保留: 无配置表
+-- 清理: 全部
+-- =============================================================================
+USE inkframe_copyright;
 
+DELETE FROM exchange_certifications;
+DELETE FROM blockchain_records;
+DELETE FROM copyright_certifications;
+
+-- =============================================================================
+-- 5. inkframe_product — 商品服务
+-- =============================================================================
+-- 保留: product_categories（商品分类）
+-- 清理: 商品、SKU、库存日志
+-- =============================================================================
+USE inkframe_product;
+
+DELETE FROM inventory_logs;
+DELETE FROM product_skus;
+DELETE FROM products;
+
+-- =============================================================================
+-- 6. inkframe_order — 订单服务
+-- =============================================================================
+-- 保留: 无配置表
+-- 清理: 全部
+-- =============================================================================
+USE inkframe_order;
+
+DELETE FROM shipping_events;
+DELETE FROM shipping_records;
+DELETE FROM order_items;
+DELETE FROM orders;
+DELETE FROM cart_items;
+DELETE FROM checkout_sessions;
+
+-- =============================================================================
+-- 7. inkframe_payment — 支付服务
+-- =============================================================================
+-- 保留: 无配置表
+-- 清理: 全部
+-- =============================================================================
+USE inkframe_payment;
+
+DELETE FROM refund_records;
+DELETE FROM payment_transactions;
+
+-- =============================================================================
+-- 8. inkframe_device — 设备服务
+-- =============================================================================
+-- 保留: device_models（设备型号配置）
+-- 清理: 设备、展示队列、推送历史、NFT 转让、网关绑定、播放日志、展示状态、图片变体
+-- =============================================================================
+USE inkframe_device;
+
+DELETE FROM device_play_log;
+DELETE FROM device_display_state;
+DELETE FROM artwork_variants;
+DELETE FROM device_gateway_bindings;
+DELETE FROM device_nft_transfers;
+DELETE FROM device_push_history;
+DELETE FROM device_display_queue;
+DELETE FROM devices;
+
+-- =============================================================================
+-- 9. inkframe_notification — 通知服务
+-- =============================================================================
+-- 保留: notification_templates（通知模板配置）
+-- 清理: 通知记录、邮件日志、短信日志
+-- =============================================================================
+USE inkframe_notification;
+
+DELETE FROM sms_send_logs;
+DELETE FROM email_send_logs;
+DELETE FROM notifications;
+
+-- =============================================================================
+-- 10. inkframe_ai — AI 服务
+-- =============================================================================
+-- 保留: ai_styles（AI 风格配置）
+-- 清理: AI 生图任务
+-- =============================================================================
+USE inkframe_ai;
+
+DELETE FROM ai_generation_tasks;
+
+-- =============================================================================
+-- 11. inkframe_points — 积分服务
+-- =============================================================================
+-- 保留: points_recharge_packages（充值包配置）
+-- 清理: 积分账户、积分流水
+-- =============================================================================
+USE inkframe_points;
+
+DELETE FROM points_transactions;
+DELETE FROM points_accounts;
+
+-- =============================================================================
+-- 12. inkframe_admin — 管理后台（整库保留，不清理）
+-- =============================================================================
+-- 保留: admins, admin_operation_logs, system_configs
+-- 说明: 管理员账号和系统配置不清理
+-- =============================================================================
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- =============================================================================
+-- 完成
+-- =============================================================================
+SELECT '清理完成' AS status;
