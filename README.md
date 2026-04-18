@@ -179,3 +179,13 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 完成
 -- =============================================================================
 SELECT '清理完成' AS status;
+
+
+
+
+
+
+-- V088: ai_generation_tasks 增加 artwork_id 列
+-- 保存到图库后回写对应的作品 ID，便于前端关联跳转
+ALTER TABLE ai_generation_tasks ADD COLUMN artwork_id BIGINT NULL DEFAULT NULL;
+
