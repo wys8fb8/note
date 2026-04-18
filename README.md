@@ -25,23 +25,22 @@ INSERT INTO admins (username, password_hash, real_name, role, status, created_at
 VALUES ('bitsharexiyi', '$2b$12$apwjTyZx3D4e/dGo34CGLOu3mcLNs6lOSn47oGXOBwgzC1K0jDo02ads', 'bitshare', 'super_admin', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 server {
-    # 核心修改：改为 8005
     listen       8006; 
     server_name  47.100.177.89;
 
     location / {
-        # 路径依然指向我们的“传送门” current
         root   /bsadmin/xiyiart/admin/current;
         index  index.html index.htm;
         try_files $uri $uri/ /index.html;
     }
 
-    # API 转发保持不变
     location /api/ {
+        client_max_body_size 100m;
         proxy_pass http://127.0.0.1:8010;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 }
+
 
