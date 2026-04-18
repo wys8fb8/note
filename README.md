@@ -248,3 +248,30 @@ AND artwork_id IS NULL;
 UPDATE ai_generation_tasks SET artwork_id = 5001 WHERE result_object_key = 'originals/ai/200/20260415_xxx.jpg' AND artwork_id IS NULL;
 UPDATE ai_generation_tasks SET artwork_id = 5002 WHERE result_object_key = 'origin
 
+
+0000000000000000
+{
+  "success": false,
+  "code": 422,
+  "message": "请求参数校验失败",
+  "data": {
+    "errors": [
+      {
+        "type": "value_error",
+        "loc": [
+          "body",
+          "portfolio_images",
+          0
+        ],
+        "msg": "Value error, Expected UploadFile, received: <class 'str'>",
+        "input": "https://inkqiyi.oss-cn-shanghai.aliyuncs.com/thumbnails/artworks/0/1e7cb52b2f9843b6aa90e3497b321901.webp,https://inkqiyi.oss-cn-shanghai.aliyuncs.com/thumbnails/artworks/0/1e7cb52b2f9843b6aa90e3497b321901.webp,https://inkqiyi.oss-cn-shanghai.aliyuncs.com/thumbnails/artworks/0/1e7cb52b2f9843b6aa90e3497b321901.webp",
+        "ctx": {
+          "error": {}
+        }
+      }
+    ]
+  },
+  "timestamp": "2026-04-18T13:02:57.246441+00:00",
+  "requestId": "req_9bcfb53fc1eb"
+}
+
