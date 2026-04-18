@@ -211,3 +211,40 @@ WHERE t.artwork_id IS NULL
   AND t.result_object_key != '';
 如果量不大直接跑就行，不影响现有数据。
 
+
+
+¥¥¥¥¥¥¥¥¥
+对，各服务独立数据库，不能 JOIN。分两步：
+
+第 1 步：在 artwork 库查映射
+
+
+-- 在 artwork_service 的数据库执行
+SELECT id AS artwork_id, original_object_key
+FROM artworks
+WHERE original_object_key LIKE 'originals/ai/%'
+  AND original_object_key != '';
+把结果拿到后，第 2 步：在 ai 库逐条更新
+
+
+-- 在 ai_service 的数据库执行
+-- 用第 1 步查出的结果替换 VALUES 里的内容
+UPDATE ai_generation_tasks
+SET artwork_id = CASE result_object_key
+    WHEN 'originals/ai/200/20260415_xxx.jpg' THEN 5001
+    WHEN 'originals/ai/100/20260416_yyy.jpg' THEN 5002
+    -- ... 第 1 步查出多少条就填多少行
+END
+WHERE result_object_key IN (
+    'originals/ai/200/20260415_xxx.jpg',
+    'originals/ai/100/20260416_yyy.jpg'
+    -- ... 同上
+)
+AND artwork_id IS NULL;
+如果数据量不大（几十条以内），也可以直接生成单条 UPDATE：
+
+
+-- 每条一句，简单粗暴
+UPDATE ai_generation_tasks SET artwork_id = 5001 WHERE result_object_key = 'originals/ai/200/20260415_xxx.jpg' AND artwork_id IS NULL;
+UPDATE ai_generation_tasks SET artwork_id = 5002 WHERE result_object_key = 'origin
+
