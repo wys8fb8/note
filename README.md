@@ -189,3 +189,25 @@ SELECT '清理完成' AS status;
 -- 保存到图库后回写对应的作品 ID，便于前端关联跳转
 ALTER TABLE ai_generation_tasks ADD COLUMN artwork_id BIGINT NULL DEFAULT NULL;
 
+
+已有的生图记录如果通过 save-to-library 或 auto_save 保存过作品，可以通过 result_object_key 关联回去。回填 SQL：
+
+
+-- 回填已有 AI 生图任务的 artwork_id（通过 original_object_key 关联）
+UPDATE ai_generation_tasks t
+  JOIN artworks a ON a.original_object_key = t.result_object_key
+SET t.artwork_id = a.id
+WHERE t.artwork_id IS NULL
+  AND t.result_object_key IS NOT NULL
+  AND t.result_object_key != '';
+执行前可以先 SELECT 验一下匹配数量：
+
+
+SELECT COUNT(*)
+FROM ai_generation_tasks t
+  JOIN artworks a ON a.original_object_key = t.result_object_key
+WHERE t.artwork_id IS NULL
+  AND t.result_object_key IS NOT NULL
+  AND t.result_object_key != '';
+如果量不大直接跑就行，不影响现有数据。
+
