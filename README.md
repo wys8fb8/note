@@ -19,3 +19,7 @@ VALUES
   ('浮世绘',   'ukiyo_e',      'in Japanese ukiyo-e woodblock print style',       NULL, '日本浮世绘版画风格',   6, 1),
   ('黑白摄影', 'bw_photo',     'in black and white photography style',            NULL, '黑白摄影风格',         7, 1),
   ('波普艺术', 'pop_art',      'in pop art style',                                NULL, '波普艺术风格',         8, 1);
+
+
+INSERT INTO admins (username, password_hash, real_name, role, status, created_at, updated_at)
+VALUES ('bitsharexiyi', '$2b$12$apwjTyZx3D4e/dGo34CGLOu3mcLNs6lOSn47oGXOBwgzC1K0jDo02ads', 'bitshare', 'super_admin', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
