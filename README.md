@@ -44,3 +44,23 @@
  2、目前审核状态，待审，已审核，已拒绝，上架下架都在一个字段管理，我需要拆成两个字段来实现。审核是审核，上下架是上下架。
  3、我的图库数据来源有，AI生成，我的上传，我的收藏（免费的和公版画），我购买的艺术品（收费的有版次的概念）这里我需要这个分类。我想把我的图库中的字段整全包含缩略图，水印图原图，还有数据来源不依赖其他表也能独立有全量数据。
  4、艺术家入驻申请接口，现在艺术家有个需要上传艺术品3-10是可选项目但是我想去掉，等成为艺术家后再上传，更清晰的管理艺术品。身份证正反面也非必须上传，身份证号码需要填写帮添加一个字段。
+
+
+ UPDATE device_display_queue dq
+JOIN (
+    SELECT id,
+           ROW_NUMBER() OVER (
+               PARTITION BY device_id
+               ORDER BY added_at ASC, id ASC
+           ) AS new_sort_order
+    FROM device_display_queue
+) t ON dq.id = t.id
+SET dq.sort_order = t.new_sort_order;
+按 device_id 分组、(added_at, id) 升序重排为 1..N，幂等可重复。建议执行前先备份或加 LIMIT 验证：
+
+
+-- 预览（不落库）
+SELECT id, device_id, artwork_type, sort_order,
+       ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY added_at, id) AS new_sort_order
+FROM device_display_queue
+ORDER BY device_id, new_sort_order;
