@@ -64,3 +64,30 @@ SELECT id, device_id, artwork_type, sort_order,
        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY added_at, id) AS new_sort_order
 FROM device_display_queue
 ORDER BY device_id, new_sort_order;
+
+
+reorder 接口用法
+路径：POST /api/v1/device/display-queue/reorder
+认证：用户 Bearer Token（设备所有者）
+
+请求
+
+{
+  "device_id": 1,
+  "ordered_ids": [3, 1, 2, 5]
+}
+ordered_ids 必须严格等于该设备当前队列全部 queue_item_id 的集合（即 docs/api/06-设备管理.md:823 display-queue/list 返回的 items[].queue_item_id 全集），不能缺、不能多
+数组顺序即为新的 sort_order：第一项 → sort_order=1，第二项 → 2，依此类推
+不区分 paid/free（slice-DV-1b 合并队列）
+典型用法
+先调 GET /api/v1/device/display-queue/list?device_id=1 拿到当前 items[].queue_item_id 列表
+前端把列表打乱/拖动后得到新顺序
+用新顺序的 queue_item_id 数组调 reorder
+
+curl -X POST "http://localhost:8080/api/v1/device/display-queue/reorder" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"device_id": 1, "ordered_ids": [3, 1, 2, 5]}'
+成功响应
+
+{ "success": true, "code": 200, "data": { "reordered": true } }
