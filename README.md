@@ -39,7 +39,13 @@ docker logs --tail 1000 inkframe-dev-gateway-1 2>&1 | grep -B 3 -A 30 "Traceback
 输出空
 docker logs --tail 1000 inkframe-dev-gateway-1 2>&1 | grep -B1 -A 25 "ERROR"
 输出空
-  
+  HTTP/1.1 500 Internal Server Error
+date: Thu, 07 May 2026 14:00:26 GMT
+server: uvicorn
+content-length: 183
+content-type: application/json
+
+{"success":false,"code":500,"message":"服务内部错误: internal error: OperationalError","data":null,"timestamp":"2026-05-07T14:00:27.213895+00:00","requestId":"req_b0e3cdfd39c7"}%     
   
   docker exec inkframe-dev-gateway-1 getent hosts user_service
 172.24.0.10     user_service
@@ -47,4 +53,12 @@ docker exec inkframe-dev-gateway-1 sh -c 'getent hosts host.docker.internal'
  docker exec inkframe-dev-gateway-1 sh -c 'getent hosts host.docker.internal'
 172.17.0.1      host.docker.internal
 
+# 1. 看 inkframe_dev_user 库是否存在 + 表数量
+docker exec -it $(docker ps -qf name=mysql) \
+  mysql -uinkframe -p'www.71AD.comxiyi' -e \
+  "SHOW DATABASES LIKE 'inkframe_dev%'; USE inkframe_dev_user; SHOW TABLES;"
+
+# 如果你 MySQL 不是跑在容器里，直接用宿主机 client：
+mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 -e \
+  "SHOW DATABASES LIKE 'inkframe_dev%'; USE inkframe_dev_user; SHOW TABLES;"
 
