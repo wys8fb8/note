@@ -62,3 +62,40 @@ docker exec -it $(docker ps -qf name=mysql) \
 mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 -e \
   "SHOW DATABASES LIKE 'inkframe_dev%'; USE inkframe_dev_user; SHOW TABLES;"
 
+  [root@iZuf62khg8ourx3stkboshZ ~]# mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 -e \
+>   "SHOW DATABASES LIKE 'inkframe_dev%'; USE inkframe_dev_user; SHOW TABLES;"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++---------------------------+
+| Database (inkframe_dev%)  |
++---------------------------+
+| inkframe_dev_admin        |
+| inkframe_dev_ai           |
+| inkframe_dev_artist       |
+| inkframe_dev_artwork      |
+| inkframe_dev_copyright    |
+| inkframe_dev_device       |
+| inkframe_dev_notification |
+| inkframe_dev_order        |
+| inkframe_dev_payment      |
+| inkframe_dev_points       |
+| inkframe_dev_product      |
+| inkframe_dev_user         |
+| inkframe_device           |
++---------------------------+
++-----------------------------+
+| Tables_in_inkframe_dev_user |
++-----------------------------+
+| _schema_migrations          |
+| membership_plans            |
+| user_addresses              |
+| user_follows                |
+| user_memberships            |
+| user_notification_prefs     |
+| user_oauth                  |
+| user_oauth_bindings         |
+| user_sessions               |
+| users                       |
+| verification_codes          |
++-----------------------------+
+
+
