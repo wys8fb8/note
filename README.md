@@ -304,3 +304,6 @@ curl -i -X POST http://localhost:8009/api/v1/user/auth/login \
 
 
 你跑完 migrate_manual_mysql.py --db-prefix inkframe_dev_ 把输出贴回来，我帮你看哪些库还需要后续 --mark-applied 修补。
+PS D:\公司项目\电子纸\xiyiartgithub\xiyiart> python migrate_manual_mysql.py --db-prefix inkframe_dev_ 
+[OK] sqlmigrate_mysql/ 下共 96 条迁移，全部已映射。
+  [EXEC] inkframe_dev_user: V098 ... [ERROR] V098__add_phone_verified_at_to_users.sql @ inkframe_dev_user: [1060] Duplicate column name 'phone_verified_at'
