@@ -303,4 +303,4 @@ curl -i -X POST http://localhost:8009/api/v1/user/auth/login \
     ERROR 1064 (42000) at line 5: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS idx_users_phone_verified ON users(phone_verified_at)' at line 1
 
 
-
+你跑完 migrate_manual_mysql.py --db-prefix inkframe_dev_ 把输出贴回来，我帮你看哪些库还需要后续 --mark-applied 修补。
