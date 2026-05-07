@@ -97,5 +97,110 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | users                       |
 | verification_codes          |
 +-----------------------------+
+>
+> 库和表都建好了，那问题在具体 SQL 执行环节。OperationalError 一定有 traceback，刚才你只看了 user_service 的开头日志。现在按下面这一步精准抓：
+
+复现并实时抓 user_service 的 traceback
+
+# 终端 A：跟 user_service 日志
+docker logs -f --tail 0 inkframe-dev-user_service-1
+
+# 终端 B：发请求触发
+curl -i -X POST http://localhost:8009/api/v1/user/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"identifier":"13800000000","password":"abc123456"}'
+或事后捞：
+
+
+docker logs --since 10m inkframe-dev-user_service-1 2>&1 | grep -B 3 -A 40 -iE "traceback|operationalerror|sqlalchemy"
+同时检查这几个高命中点
+1. 表结构是否到位（迁移有没有跑全）
+users 表里有几个登录流程必需的字段，看一下：
+
+
+mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 inkframe_dev_user -e \
+  "DESC users; SELECT version FROM _schema_migrations ORDER BY version;"
+把 users 表结构和已应用的版本号贴出来。重点看是否有 phone、email、username、password_hash、status 这几列。
+
+2. 登录账户是否存在
+
+mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 inkframe_dev_user -e \
+  "SELECT id, username, email, phone, status FROM users LIMIT 5;"
+如果一行没有，那登录查不到用户，但应该是 UNAUTHENTICATED 而不是 OperationalError——除非查询本身就报错。
+
+3. user_service 实际跑的是哪条 SQL
+Bash Find login query in user_service
+IN
+grep -rnE "def.*login|by_identifier|find.*user" /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/infrastructure/persistence/ 2>/dev/null | head -10
+
+OUT
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/infrastructure/persistence/sql_oauth_repository.py:27:    async def find_by_user_id(
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/infrastructure/persistence/sql_oauth_repository.py:41:    async def find_by_user_and_provider(
+Bash Find login command handler
+IN
+grep -rnE "Login|login|identifier" /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/ 2>/dev/null | head -10
+
+OUT
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/admin_stats_query.py:6:- active_today:   今日活跃用户数（UserModel 暂无 last_login_at 列，返回 0 占位）
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/admin_stats_query.py:7:                  TODO: 待 last_login_at 列就绪后替换占位逻辑
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/admin_stats_query.py:26:    active_today: int  # 暂固定为 0，等 last_login_at 列就绪后实现
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/admin_stats_query.py:62:            # 今日活跃用户数：UserModel 当前无 last_login_at 列，返回 0 占位
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/admin_stats_query.py:63:            # TODO: 待 last_login_at 列添加后，替换为：
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/admin_stats_query.py:65:            #       UserModel.last_login_at >= today_start)
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/authenticate_user.py:16:    identifier: str  # username / email / phone 之一
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/authenticate_user.py:21:    """按 identifier 查用户并校验密码。
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/authenticate_user.py:33:        user = await self._repo.get_by_username(query.identifier)
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/application/queries/authenticate_user.py:35:            user = await self._repo.get_by_email(query.identifier)
+Read authenticate_user.py (lines 26-75)
+Bash Inspect UserModel columns
+IN
+grep -nE "class UserModel|Column|__tablename__" /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/infrastructure/persistence/sql_user_repository.py 2>/dev/null | head -30
+
+OUT
+(Bash completed with no output)
+Bash Locate UserModel
+IN
+find /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/ -name "*.py" | xargs grep -ln "class UserModel" 2>/dev/null
+
+OUT
+/Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/infrastructure/persistence/user_model.py
+Bash Show UserModel columns
+IN
+grep -nE "Column|mapped_column|__tablename__" /Users/bitshare/Desktop/panhx/xiyiart/xiyiart/services/user_service/user_service/infrastructure/persistence/user_model.py
+
+OUT
+11:from sqlalchemy.orm import Mapped, mapped_column
+17:    __tablename__ = "users"
+19:    username: Mapped[Optional[str]] = mapped_column(
+22:    email: Mapped[Optional[str]] = mapped_column(
+25:    phone: Mapped[Optional[str]] = mapped_column(
+29:    phone_verified_at: Mapped[Optional[object]] = mapped_column(
+33:    password_hash: Mapped[str] = mapped_column(String(128), nullable=False)
+35:    nickname: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+36:    avatar_url: Mapped[Optional[str]] = mapped_column(
+39:    avatar_width: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+40:    avatar_height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+41:    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+43:    role: Mapped[str] = mapped_column(String(20), nullable=False, default="user")
+44:    status: Mapped[str] = mapped_column(
+47:    membership_level: Mapped[str] = mapped_column(
+51:    chain_address: Mapped[Optional[str]] = mapped_column(
+login 查询会按顺序查 username / email / phone（authenticate_user.py:33-37），SELECT 出 UserModel 的全部列。最常见的 OperationalError 是 某个迁移漏跑导致列缺失。UserModel 期望以下列：
+
+
+username  email  phone  phone_verified_at  password_hash
+nickname  avatar_url  avatar_width  avatar_height  bio
+role  status  membership_level  chain_address
+这两条命令一起跑，把输出贴回来
+
+# 1. users 表实际结构 + 已应用的迁移版本
+mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 inkframe_dev_user -e \
+  "DESC users; SELECT version FROM _schema_migrations ORDER BY version;"
+
+# 2. user_service 最近的 traceback（复现一次再抓）
+docker logs --since 5m inkframe-dev-user_service-1 2>&1 | grep -B 3 -A 40 -iE "traceback|operationalerror|unknown column|sqlalchemy"
+第 1 条会告诉我"哪一列缺了"，第 2 条会直接告诉我"哪一行 SQL 炸了"。两个加起来基本就能一锤定音。
+
+注：你刚才贴的 dev_user 表已有 users / user_addresses / user_oauth / user_oauth_bindings / user_sessions / user_memberships / user_notification_prefs / user_follows / verification_codes / membership_plans 共 10 张业务表，少了 V003 对应的 user_oauth 不在我列表里但已有——大致都到位，但具体列差异要 DESC 才能看出来。
 
 
