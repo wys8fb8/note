@@ -173,3 +173,24 @@ python migrate_manual_mysql.py --db-prefix inkframe_dev_
       
 rabbitmqctl add_vhost inkframe_dev
 rabbitmqctl set_permissions -p inkframe_dev inkframe ".*" ".*" ".*"
+
+
+ docker logs  inkframe-dev-gateway-1 2>&1|grep -E "ERROR|Traceback|500" |tail -50
+INFO:     180.165.11.223:2311 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2313 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2314 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2316 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2317 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2318 - "GET /api/v1/artwork/gallery/list?page=1&page_size=20&sort=latest HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2320 - "GET /api/v1/artwork/gallery/list?page=1&page_size=20&sort=latest HTTP/1.1" 500 Internal Server Error
+INFO:     180.165.11.223:2321 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+[root@iZuf62khg8ourx3stkboshZ xiyiart-pre]# docker logs --tail 200  inkframe-dev-user_service-1
+2026-05-07 13:27:03,671 | INFO     | user_service | user_service | 正在启动 UserService gRPC (port=60051)...
+2026-05-07 13:27:03,671 | INFO     | user_service | user_service | DATABASE_URL=mysql+aiomysql://inkframe:www.71AD.comxiyi@host.docker.internal:3306/inkframe_dev_user
+2026-05-07 13:27:03,699 | DEBUG    | user_service | aiomysql | caching sha2: succeeded by fast path.
+2026-05-07 13:27:03,800 | INFO     | user_service | user_service | RabbitMQ 发布器连接成功
+2026-05-07 13:27:03,894 | INFO     | user_service | user_service | RabbitMQ 消费器已启动，监听 chain_account.created / artist.kyc_approved / artist.kyc_rejected
+2026-05-07 13:27:03,996 | INFO     | user_service | user_service | Redis 已连接 url=redis://:www.71AD.comxiyi@host.docker.internal:6379/1
+2026-05-07 13:27:04,000 | INFO     | user_service | user_service | notification_service stub 创建成功 addr=notification_service:60059
+2026-05-07 13:27:04,005 | INFO     | user_service | user_service | UserService gRPC 已启动，监听 [::]:60051
+
