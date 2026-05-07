@@ -167,3 +167,9 @@ python migrate_manual_mysql.py --db-prefix inkframe_dev_
 
   • 部分库已有 _schema_migrations 表 → 这些库直接跑迁移即可：
       python migrate_manual_mysql.py --db-prefix inkframe_dev_ --dry-run
+
+      **************
+
+      
+rabbitmqctl add_vhost inkframe_dev
+rabbitmqctl set_permissions -p inkframe_dev inkframe ".*" ".*" ".*"
