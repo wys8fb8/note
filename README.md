@@ -278,4 +278,29 @@ curl -i -X POST http://localhost:8009/api/v1/user/auth/login \
   -d '{"identifier":"13800000000","password":"abc123456"}'
 
 
+[root@iZuf62khg8ourx3stkboshZ xiyiart-pre]# DB_PREFIX=inkframe_dev_ \
+> DB_USER=inkframe \
+> DB_PASS='www.71AD.comxiyi' \
+> DB_HOST=127.0.0.1 \
+>   bash scripts/migrate_mysql.sh
+[migrate] prefix=inkframe_dev_ host=127.0.0.1:3306 user=inkframe
+
+==> 检查 / 初始化 12 个数据库
+
+==> inkframe_dev_user (DB_MAP)
+  [skip] inkframe_dev_user <- V001
+  [skip] inkframe_dev_user <- V002
+  [skip] inkframe_dev_user <- V003
+  [skip] inkframe_dev_user <- V004
+  [skip] inkframe_dev_user <- V012
+  [skip] inkframe_dev_user <- V013
+  [skip] inkframe_dev_user <- V014
+  [skip] inkframe_dev_user <- V015
+  [skip] inkframe_dev_user <- V016
+  [skip] inkframe_dev_user <- V060
+  [apply] inkframe_dev_user <- V098__add_phone_verified_at_to_users.sql
+  [FAIL] inkframe_dev_user <- V098
+    ERROR 1064 (42000) at line 5: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'IF NOT EXISTS idx_users_phone_verified ON users(phone_verified_at)' at line 1
+
+
 
