@@ -204,3 +204,53 @@ docker logs --since 5m inkframe-dev-user_service-1 2>&1 | grep -B 3 -A 40 -iE "t
 注：你刚才贴的 dev_user 表已有 users / user_addresses / user_oauth / user_oauth_bindings / user_sessions / user_memberships / user_notification_prefs / user_follows / verification_codes / membership_plans 共 10 张业务表，少了 V003 对应的 user_oauth 不在我列表里但已有——大致都到位，但具体列差异要 DESC 才能看出来。
 
 
+
+
+[root@iZuf62khg8ourx3stkboshZ ~]# mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 inkframe_dev_user -e \
+>   "DESC users; SELECT version FROM _schema_migrations ORDER BY version;"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------------+--------------+------+-----+-------------------+-------------------+
+| Field                 | Type         | Null | Key | Default           | Extra             |
++-----------------------+--------------+------+-----+-------------------+-------------------+
+| id                    | int          | NO   | PRI | NULL              | auto_increment    |
+| username              | varchar(50)  | YES  | UNI | NULL              |                   |
+| email                 | varchar(100) | YES  | UNI | NULL              |                   |
+| phone                 | varchar(20)  | YES  | UNI | NULL              |                   |
+| password_hash         | varchar(128) | NO   |     | NULL              |                   |
+| nickname              | varchar(50)  | YES  |     | NULL              |                   |
+| avatar_url            | varchar(500) | YES  |     | NULL              |                   |
+| bio                   | text         | YES  |     | NULL              |                   |
+| gender                | varchar(10)  | YES  |     | NULL              |                   |
+| birthday              | date         | YES  |     | NULL              |                   |
+| city                  | varchar(100) | YES  |     | NULL              |                   |
+| role                  | varchar(20)  | NO   | MUL | user              |                   |
+| status                | varchar(20)  | NO   | MUL | active            |                   |
+| membership_level      | varchar(20)  | NO   |     | free              |                   |
+| membership_expires_at | datetime     | YES  | MUL | NULL              |                   |
+| chain_address         | varchar(100) | YES  | UNI | NULL              |                   |
+| chain_private_key_enc | varchar(500) | YES  |     | NULL              |                   |
+| chain_created_at      | datetime     | YES  |     | NULL              |                   |
+| created_at            | datetime     | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| updated_at            | datetime     | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| avatar_width          | int          | YES  |     | NULL              |                   |
+| avatar_height         | int          | YES  |     | NULL              |                   |
++-----------------------+--------------+------+-----+-------------------+-------------------+
++---------+
+| version |
++---------+
+| V001    |
+| V002    |
+| V003    |
+| V004    |
+| V012    |
+| V013    |
+| V014    |
+| V015    |
+| V016    |
+| V060    |
+| V061    |
++---------+
+[root@iZuf62khg8ourx3stkboshZ ~]# docker logs --since 5m inkframe-dev-user_service-1 2>&1 | grep -B 3 -A 40 -iE "traceback|operationalerror|unknown column|sqlalchemy"
+
+
+
