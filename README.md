@@ -251,6 +251,31 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 | V061    |
 +---------+
 [root@iZuf62khg8ourx3stkboshZ ~]# docker logs --since 5m inkframe-dev-user_service-1 2>&1 | grep -B 3 -A 40 -iE "traceback|operationalerror|unknown column|sqlalchemy"
+>
+> 
+> 
+# 切到项目目录
+cd /path/to/xiyiart-pre   # 你的项目根目录
+
+# 1. 把 dev 库一次性补全
+DB_PREFIX=inkframe_dev_ \
+DB_USER=inkframe \
+DB_PASS='www.71AD.comxiyi' \
+DB_HOST=127.0.0.1 \
+  bash scripts/migrate_mysql.sh
+
+# 2. 重启 dev 微服务（迁移期间最好先停服避免连接报错）
+docker compose -f docker-compose.dev.yml restart
+
+# 3. 验证 user_service
+mysql -uinkframe -p'www.71AD.comxiyi' -h 127.0.0.1 inkframe_dev_user -e \
+  "SELECT version FROM _schema_migrations ORDER BY version;"
+# 期望看到：V001 V002 V003 V004 V012 V013 V014 V015 V016 V055 V060 V061 V098
+
+# 4. 复测登录
+curl -i -X POST http://localhost:8009/api/v1/user/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"identifier":"13800000000","password":"abc123456"}'
 
 
 
