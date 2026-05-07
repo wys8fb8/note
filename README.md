@@ -31,3 +31,20 @@ docker exec inkframe-dev-gateway-1 getent hosts artwork_service
 
 # 3. gateway 容器里能否 ping 通 host.docker.internal 的 Redis/MySQL
 docker exec inkframe-dev-gateway-1 sh -c 'getent hosts host.docker.internal'
+
+INFO:     172.24.0.8:33828 - "GET /metrics HTTP/1.1" 401 Unauthorized
+INFO:     31.94.24.193:57304 - "POST /api/v1/user/auth/login HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:34066 - "GET /health HTTP/1.1" 200 OK
+docker logs --tail 1000 inkframe-dev-gateway-1 2>&1 | grep -B 3 -A 30 "Traceback"
+输出空
+docker logs --tail 1000 inkframe-dev-gateway-1 2>&1 | grep -B1 -A 25 "ERROR"
+输出空
+  
+  
+  docker exec inkframe-dev-gateway-1 getent hosts user_service
+172.24.0.10     user_service
+docker exec inkframe-dev-gateway-1 sh -c 'getent hosts host.docker.internal'
+ docker exec inkframe-dev-gateway-1 sh -c 'getent hosts host.docker.internal'
+172.17.0.1      host.docker.internal
+
+
