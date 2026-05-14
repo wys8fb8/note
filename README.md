@@ -14,3 +14,13 @@ python migrate_manual_mysql.py --db-prefix inkframe_dev_ --tolerate-existing
 [OK] inkframe_dev_payment: 0 条新迁移执行完成，5 条已应用跳过
   [EXEC] inkframe_dev_device: V118 ... [ERROR] V118__display_chain_keyed_by_library_item.sql @ inkframe_dev_device: [1091] Can't DROP 'idx_display_queue_artwork'; check that column/key exists
         statement: DROP INDEX idx_display_queue_artwork ON device_display_queue
+USE inkframe_dev_device;
+
+-- 1. device_display_queue 所有索引
+SHOW INDEX FROM device_display_queue;
+
+-- 2. device_display_queue 当前列（看是否已有 library_item_id 列）
+SHOW COLUMNS FROM device_display_queue;
+
+-- 3. device_display_state 当前列
+SHOW COLUMNS FROM device_display_state;
